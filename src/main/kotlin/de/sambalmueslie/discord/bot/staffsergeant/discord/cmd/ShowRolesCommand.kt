@@ -72,7 +72,7 @@ class ShowRolesCommand(
     }
 
     override suspend fun <T : InteractionCreateEvent> process(event: T) {
-        if(event is ChatInputInteractionEvent) {
+        if (event is ChatInputInteractionEvent) {
             val ephemeral = event.getOption(OPTION_PUBLIC)
                 .flatMap(ApplicationCommandInteractionOption::getValue)
                 .map(ApplicationCommandInteractionOptionValue::asBoolean)
@@ -100,10 +100,13 @@ class ShowRolesCommand(
 
         val roles = withContext(Dispatchers.IO) {
             guild.roles.toIterable()
-        }.filter { it.name.matches(filter) }.associateBy { it.name }
+                .filter { it.name.matches(filter) }
+                .sortedByDescending { it.rawPosition }
+        }
 
-        val membersByRole = roles.values.associateWith { getMemberForRole(it, members) }
-            .filterValues { it.isNotEmpty() }
+
+        val membersByRole = roles.map { it to getMemberForRole(it, members) }
+            .filter { it.second.isNotEmpty() }
 
         val builder = EmbedCreateSpec.builder()
         builder.author(EmbedCreateFields.Author.of("Staffsergeant", null, null))
@@ -111,9 +114,9 @@ class ShowRolesCommand(
 
         val description = StringBuilder()
 
-        membersByRole.entries.sortedByDescending { it.key.rawPosition }.forEach { (role, members) ->
+        membersByRole.forEach { (role, members) ->
             description.append(role.mention).appendLine()
-            members.sortedBy { it.displayName }.forEach { m ->
+            members.forEach { m ->
                 description.append(" - ").append(m.mention).appendLine()
             }
             description.appendLine()
@@ -124,8 +127,8 @@ class ShowRolesCommand(
         val spec = InteractionFollowupCreateSpec.builder()
         spec.addEmbed(builder.build())
 
-        val output = membersByRole.entries.sortedByDescending { it.key.rawPosition }.map { (role, members) ->
-            MembersByRole(role.name, members.sortedBy { it.displayName }.map { it.displayName })
+        val output = membersByRole.map { (role, members) ->
+            MembersByRole(role.name, members.map { it.displayName })
         }
         val file = withContext(Dispatchers.IO) {
             Files.createTempFile("member", "")
@@ -139,7 +142,7 @@ class ShowRolesCommand(
     }
 
     private fun getMemberForRole(role: Role, members: Iterable<Member>): List<Member> {
-        return members.filter { it.roleIds.contains(role.id) }.toList()
+        return members.filter { it.roleIds.contains(role.id) }.sortedBy { it.displayName }.toList()
     }
 }
 
