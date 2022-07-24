@@ -1,0 +1,6 @@
+applicationType: default
+defaultPackage: de.sambalmueslie.discord.bot
+testFramework: junit
+sourceLanguage: kotlin
+buildTool: gradle_kotlin
+features: [ annotation-api, app-name, cache-caffeine, data, data-jdbc, graalvm, gradle, http-client, jackson-databind, jdbc-hikari, junit, kotlin, kotlin-application, kotlin-build, kotlin-extension-functions, logback, micronaut-build, netty-server, openapi, postgres, reactor, reactor-http-client, readme, security, security-annotations, security-jwt, shade, testcontainers, yaml ]
