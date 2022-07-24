@@ -1,9 +1,10 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.6.21"
-    id("org.jetbrains.kotlin.kapt") version "1.6.21"
-    id("org.jetbrains.kotlin.plugin.allopen") version "1.6.21"
+    id("org.jetbrains.kotlin.jvm") version "1.7.10"
+    id("org.jetbrains.kotlin.kapt") version "1.7.10"
+    id("org.jetbrains.kotlin.plugin.allopen") version "1.7.10"
     id("com.github.johnrengelman.shadow") version "7.1.2"
-    id("io.micronaut.application") version "3.4.1"
+    id("io.micronaut.application") version "3.5.1"
+    id("org.sonarqube") version "3.4.0.2513"
 }
 
 version = "0.1"
@@ -36,7 +37,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
     runtimeOnly("ch.qos.logback:logback-classic")
-//    runtimeOnly("org.postgresql:postgresql")
+    runtimeOnly("org.postgresql:postgresql")
     compileOnly("jakarta.persistence:jakarta.persistence-api:3.1.0")
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
@@ -101,6 +102,15 @@ tasks.jar {
 
 tasks.register("stage") {
     dependsOn("build", "clean")
+}
+
+
+sonarqube {
+    properties {
+        property("sonar.projectKey", "Black-Forrest-Development_staffseargant")
+        property("sonar.organization", "black-forrest-development")
+        property("sonar.host.url", "https://sonarcloud.io")
+    }
 }
 
 
