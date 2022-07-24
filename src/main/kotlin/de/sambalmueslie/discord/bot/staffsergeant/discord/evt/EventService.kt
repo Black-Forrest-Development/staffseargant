@@ -62,7 +62,7 @@ class EventService(
     }
 
     private suspend fun handleEvent(event: ButtonInteractionEvent) {
-        // TODO not implemented yet
+        commandService.handleEvent(event)
     }
 
 }

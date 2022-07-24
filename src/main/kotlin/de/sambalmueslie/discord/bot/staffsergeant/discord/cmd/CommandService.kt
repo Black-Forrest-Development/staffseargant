@@ -2,10 +2,9 @@ package de.sambalmueslie.discord.bot.staffsergeant.discord.cmd
 
 
 import discord4j.core.GatewayDiscordClient
+import discord4j.core.event.domain.interaction.ButtonInteractionEvent
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
 import jakarta.inject.Singleton
-import kotlinx.coroutines.reactive.asFlow
-import kotlinx.coroutines.reactor.mono
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -23,7 +22,7 @@ class CommandService(
         val applicationId = restClient.applicationId.block() ?: return logger.error("Not application id found")
 
         commands.forEach {
-            logger.info("Register Command: [$it]")
+            logger.info("Register Command: [${it.name}]")
             it.register(restClient, applicationId)
         }
     }
@@ -32,6 +31,15 @@ class CommandService(
         val cmd = commands.firstOrNull { it.matches(event) }
         if (cmd == null) {
             event.reply("Unknown command ${event.commandName}")
+        } else {
+            cmd.process(event)
+        }
+    }
+
+    suspend fun handleEvent(event: ButtonInteractionEvent) {
+        val cmd = commands.firstOrNull { it.matches(event) }
+        if (cmd == null) {
+            event.reply()
         } else {
             cmd.process(event)
         }

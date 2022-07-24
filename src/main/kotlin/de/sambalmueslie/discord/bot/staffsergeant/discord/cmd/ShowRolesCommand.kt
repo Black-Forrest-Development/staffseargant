@@ -3,6 +3,7 @@ package de.sambalmueslie.discord.bot.staffsergeant.discord.cmd
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
+import discord4j.core.event.domain.interaction.InteractionCreateEvent
 import discord4j.core.`object`.command.ApplicationCommandInteractionOption
 import discord4j.core.`object`.command.ApplicationCommandInteractionOptionValue
 import discord4j.core.`object`.command.ApplicationCommandOption
@@ -66,20 +67,22 @@ class ShowRolesCommand(
         restClient.applicationService.createGlobalApplicationCommand(applicationId, request).subscribe()
     }
 
-    override fun matches(event: ChatInputInteractionEvent): Boolean {
-        return event.commandName == CMD
+    override fun <T : InteractionCreateEvent> matches(event: T): Boolean {
+        return event is ChatInputInteractionEvent && event.commandName == CMD
     }
 
-    override suspend fun process(event: ChatInputInteractionEvent) {
-        val ephemeral = event.getOption(OPTION_PUBLIC)
-            .flatMap(ApplicationCommandInteractionOption::getValue)
-            .map(ApplicationCommandInteractionOptionValue::asBoolean)
-            .orElse(false)
+    override suspend fun <T : InteractionCreateEvent> process(event: T) {
+        if(event is ChatInputInteractionEvent) {
+            val ephemeral = event.getOption(OPTION_PUBLIC)
+                .flatMap(ApplicationCommandInteractionOption::getValue)
+                .map(ApplicationCommandInteractionOptionValue::asBoolean)
+                .orElse(false)
 
-        event.deferReply()
-            .withEphemeral(ephemeral)
-            .then(handleShowRolesCommand(event))
-            .subscribe()
+            event.deferReply()
+                .withEphemeral(ephemeral)
+                .then(handleShowRolesCommand(event))
+                .subscribe()
+        }
     }
 
     @Suppress("ReactiveStreamsUnusedPublisher")
