@@ -7,11 +7,11 @@ import de.sambalmueslie.discord.bot.staffsergeant.discord.evt.EventService
 import discord4j.core.DiscordClient
 import discord4j.core.GatewayDiscordClient
 import discord4j.core.event.domain.guild.MemberUpdateEvent
-import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
 import discord4j.core.`object`.presence.ClientActivity
 import discord4j.core.`object`.presence.ClientPresence
 import discord4j.gateway.intent.Intent
 import discord4j.gateway.intent.IntentSet
+import io.micronaut.context.annotation.Requires
 import io.micronaut.context.event.ApplicationEventListener
 import io.micronaut.runtime.server.event.ServerStartupEvent
 import jakarta.inject.Singleton
@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory
 
 
 @Singleton
+@Requires(notEnv = ["test"])
 class DiscordBot(
     private val config: AppConfig,
     private val commandService: CommandService,
