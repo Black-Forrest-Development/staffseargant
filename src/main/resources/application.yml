@@ -59,4 +59,4 @@ flyway:
       default-schema: staffsergeant
       create-schemas: true
       schemas: staffsergeant
-      clean-schema: false
+      clean-schema: true

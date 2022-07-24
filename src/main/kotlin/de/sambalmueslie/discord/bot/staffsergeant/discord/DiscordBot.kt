@@ -68,9 +68,4 @@ class DiscordBot(
     }
 
 
-    private suspend fun handleMemberUpdateEvent(event: MemberUpdateEvent) {
-        // TODO not implemented yet
-    }
-
-
 }

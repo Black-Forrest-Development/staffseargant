@@ -2,6 +2,7 @@ package de.sambalmueslie.discord.bot.staffsergeant.discord.evt
 
 
 import de.sambalmueslie.discord.bot.staffsergeant.discord.cmd.CommandService
+import de.sambalmueslie.discord.bot.staffsergeant.discord.processor.RegisterBotProcessor
 import discord4j.core.GatewayDiscordClient
 import discord4j.core.event.domain.Event
 import discord4j.core.event.domain.guild.GuildCreateEvent
@@ -16,7 +17,8 @@ import org.slf4j.LoggerFactory
 
 @Singleton
 class EventService(
-    private val commandService: CommandService
+    private val commandService: CommandService,
+    private val registerBotProcessor: RegisterBotProcessor
 ) {
 
     companion object {
@@ -56,7 +58,7 @@ class EventService(
     }
 
     private suspend fun handleEvent(event: GuildCreateEvent) {
-        // TODO not implemented yet
+        registerBotProcessor.handleEvent(event)
     }
 
     private suspend fun handleEvent(event: ButtonInteractionEvent) {
