@@ -40,6 +40,9 @@ class ShowRolesCommand(
         private const val OPTION_PUBLIC = "public"
     }
 
+    override val name: String
+        get() = CMD
+
     override fun register(restClient: RestClient, applicationId: Long) {
         val request: ApplicationCommandRequest = ApplicationCommandRequest.builder()
             .name(CMD)
