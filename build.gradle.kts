@@ -4,6 +4,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.allopen") version "1.6.21"
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("io.micronaut.application") version "3.4.1"
+    id("org.sonarqube") version "3.4.0.2513"
 }
 
 version = "0.1"
@@ -101,6 +102,15 @@ tasks.jar {
 
 tasks.register("stage") {
     dependsOn("build", "clean")
+}
+
+
+sonarqube {
+    properties {
+        property("sonar.projectKey", "Black-Forrest-Development_staffseargant")
+        property("sonar.organization", "black-forrest-development")
+        property("sonar.host.url", "https://sonarcloud.io")
+    }
 }
 
 
