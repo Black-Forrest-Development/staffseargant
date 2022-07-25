@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import io.micronaut.context.event.BeanCreatedEvent
 import io.micronaut.context.event.BeanCreatedEventListener
 import io.micronaut.runtime.Micronaut
-import io.swagger.v3.oas.annotations.*
-import io.swagger.v3.oas.annotations.info.*
+import io.swagger.v3.oas.annotations.OpenAPIDefinition
+import io.swagger.v3.oas.annotations.info.Info
 import jakarta.inject.Singleton
 
 @OpenAPIDefinition(

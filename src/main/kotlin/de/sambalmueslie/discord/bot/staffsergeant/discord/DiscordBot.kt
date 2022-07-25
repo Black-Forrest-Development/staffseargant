@@ -6,7 +6,6 @@ import de.sambalmueslie.discord.bot.staffsergeant.discord.cmd.CommandService
 import de.sambalmueslie.discord.bot.staffsergeant.discord.evt.EventService
 import discord4j.core.DiscordClient
 import discord4j.core.GatewayDiscordClient
-import discord4j.core.event.domain.guild.MemberUpdateEvent
 import discord4j.core.`object`.presence.ClientActivity
 import discord4j.core.`object`.presence.ClientPresence
 import discord4j.gateway.intent.Intent

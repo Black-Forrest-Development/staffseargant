@@ -7,11 +7,10 @@ import discord4j.core.event.domain.interaction.InteractionCreateEvent
 import discord4j.core.`object`.command.ApplicationCommandInteractionOption
 import discord4j.core.`object`.command.ApplicationCommandInteractionOptionValue
 import discord4j.core.`object`.command.ApplicationCommandOption
+import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.Role
-import discord4j.core.spec.EmbedCreateFields
-import discord4j.core.spec.EmbedCreateSpec
 import discord4j.core.spec.InteractionFollowupCreateSpec
 import discord4j.discordjson.json.ApplicationCommandOptionData
 import discord4j.discordjson.json.ApplicationCommandRequest
@@ -24,9 +23,9 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Mono
 import java.nio.file.Files
-import java.time.Instant
 import kotlin.io.path.inputStream
 import kotlin.io.path.writeText
+import kotlin.system.measureTimeMillis
 
 
 @Singleton
@@ -39,6 +38,7 @@ class ShowRolesCommand(
         private const val CMD = "show_roles"
         private const val OPTION_FILTER = "filter"
         private const val OPTION_PUBLIC = "public"
+        private const val OPTION_ATTACHMENT = "attachment"
     }
 
     override val name: String
@@ -62,6 +62,13 @@ class ShowRolesCommand(
                     .type(ApplicationCommandOption.Type.BOOLEAN.value)
                     .required(false).build()
             )
+            .addOption(
+                ApplicationCommandOptionData.builder()
+                    .name(OPTION_ATTACHMENT)
+                    .description("Add an JSON attachment")
+                    .type(ApplicationCommandOption.Type.BOOLEAN.value)
+                    .required(false).build()
+            )
             .build()
 
         restClient.applicationService.createGlobalApplicationCommand(applicationId, request).subscribe()
@@ -73,10 +80,8 @@ class ShowRolesCommand(
 
     override suspend fun <T : InteractionCreateEvent> process(event: T) {
         if (event is ChatInputInteractionEvent) {
-            val ephemeral = event.getOption(OPTION_PUBLIC)
-                .flatMap(ApplicationCommandInteractionOption::getValue)
-                .map(ApplicationCommandInteractionOptionValue::asBoolean)
-                .orElse(false)
+            val ephemeral = getOptionPublic(event)
+            logger.debug("Public reply = ${!ephemeral}")
 
             event.deferReply()
                 .withEphemeral(ephemeral)
@@ -85,48 +90,60 @@ class ShowRolesCommand(
         }
     }
 
+
+
     @Suppress("ReactiveStreamsUnusedPublisher")
     private suspend fun handleShowRolesCommand(event: ChatInputInteractionEvent): Mono<Message> {
         val guild = event.interaction.guild.awaitSingle() ?: return event.createFollowup("Cannot find guild")
+        logger.info("Show roles for ${guild.name}")
 
-        val members = withContext(Dispatchers.IO) {
-            guild.members.toIterable()
-        }
-
-        val filter = event.getOption(OPTION_FILTER)
-            .flatMap(ApplicationCommandInteractionOption::getValue)
-            .map(ApplicationCommandInteractionOptionValue::asString)
-            .orElse(".*").toRegex()
-
-        val roles = withContext(Dispatchers.IO) {
-            guild.roles.toIterable()
-                .filter { it.name.matches(filter) }
-                .sortedByDescending { it.rawPosition }
-        }
-
-
+        val members = getMembers(guild)
+        logger.debug("Found ${members.size} members")
+        val roles = getRoles(event, guild)
+        logger.debug("Found ${roles.size} roles")
         val membersByRole = roles.map { it to getMemberForRole(it, members) }
             .filter { it.second.isNotEmpty() }
 
-        val builder = EmbedCreateSpec.builder()
-        builder.author(EmbedCreateFields.Author.of("Staffsergeant", null, null))
-        builder.title("Current Roles with filter '${filter.pattern}'")
+        val spec = InteractionFollowupCreateSpec.builder()
+        var duration = measureTimeMillis { createContent(membersByRole, spec) }
+        logger.debug("Create content within $duration ms.")
 
+        val attachment = getOptionAttachment(event)
+        logger.debug("Create attachment = $attachment")
+        if (attachment) {
+            duration = measureTimeMillis { addAttachment(membersByRole, spec) }
+            logger.debug("Create attachment within $duration ms.")
+        }
+
+        return event.createFollowup(spec.build())
+
+    }
+
+    private fun createContent(
+        membersByRole: List<Pair<Role, List<Member>>>,
+        spec: InteractionFollowupCreateSpec.Builder
+    ) {
         val description = StringBuilder()
-
         membersByRole.forEach { (role, members) ->
-            description.append(role.mention).appendLine()
+            description.append("[${role.mention}]").appendLine()
             members.forEach { m ->
                 description.append(" - ").append(m.mention).appendLine()
             }
             description.appendLine()
         }
-        builder.description(description.toString())
-        builder.timestamp(Instant.now())
+        spec.content(description.toString())
+    }
 
-        val spec = InteractionFollowupCreateSpec.builder()
-        spec.addEmbed(builder.build())
+    private suspend fun getMembers(guild: Guild): List<Member> {
+        return withContext(Dispatchers.IO) {
+            guild.members.toIterable().toList()
+        }
+    }
 
+    private suspend fun addAttachment(
+        membersByRole: List<Pair<Role, List<Member>>>,
+        spec: InteractionFollowupCreateSpec.Builder
+    ) {
         val output = membersByRole.map { (role, members) ->
             MembersByRole(role.name, members.map { it.displayName })
         }
@@ -136,10 +153,30 @@ class ShowRolesCommand(
 
         file.writeText(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(output))
         spec.addFile("roles.json", file.inputStream())
-
-        return event.createFollowup(spec.build())
-
     }
+
+    private suspend fun getRoles(event: ChatInputInteractionEvent, guild: Guild): List<Role> {
+        val filter = getOptionFilter(event)
+        logger.debug("Build roles with filter '${filter.pattern}'")
+        return withContext(Dispatchers.IO) {
+            guild.roles.toIterable()
+                .filter { it.name.matches(filter) }
+                .sortedByDescending { it.rawPosition }
+        }
+    }
+    private fun getOptionPublic(event: ChatInputInteractionEvent) = event.getOption(OPTION_PUBLIC)
+        .flatMap(ApplicationCommandInteractionOption::getValue)
+        .map(ApplicationCommandInteractionOptionValue::asBoolean)
+        .orElse(true).not()
+    private fun getOptionFilter(event: ChatInputInteractionEvent) = event.getOption(OPTION_FILTER)
+        .flatMap(ApplicationCommandInteractionOption::getValue)
+        .map(ApplicationCommandInteractionOptionValue::asString)
+        .orElse(".*").toRegex()
+
+    private fun getOptionAttachment(event: ChatInputInteractionEvent) = event.getOption(OPTION_FILTER)
+        .flatMap(ApplicationCommandInteractionOption::getValue)
+        .map(ApplicationCommandInteractionOptionValue::asBoolean)
+        .orElse(true)
 
     private fun getMemberForRole(role: Role, members: Iterable<Member>): List<Member> {
         return members.filter { it.roleIds.contains(role.id) }.sortedBy { it.displayName }.toList()
