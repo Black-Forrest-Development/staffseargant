@@ -12,10 +12,12 @@ import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.channel.MessageChannel
+import discord4j.core.spec.EmbedCreateSpec
 import discord4j.core.spec.MessageCreateSpec
 import discord4j.discordjson.json.ApplicationCommandOptionData
 import discord4j.discordjson.json.ApplicationCommandRequest
 import discord4j.rest.RestClient
+import discord4j.rest.util.Color
 import jakarta.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.reactor.awaitSingle
@@ -25,9 +27,7 @@ import org.slf4j.LoggerFactory
 import reactor.core.publisher.Mono
 import java.lang.Integer.min
 import java.nio.file.Files
-import java.time.LocalDate
-import java.time.Period
-import java.time.ZoneOffset
+import java.time.Instant
 import kotlin.io.path.inputStream
 import kotlin.io.path.writeText
 import kotlin.system.measureTimeMillis
@@ -116,14 +116,16 @@ class ExportRolesCommand(
         var duration = measureTimeMillis { createContent(channel, membersByRole) }
         logger.debug("Create content within $duration ms.")
 
+        var totalDuration = duration
         val attachment = getOptionAttachment(event)
         logger.debug("Create attachment = $attachment")
         if (attachment) {
             duration = measureTimeMillis { addAttachment(channel, membersByRole) }
             logger.debug("Create attachment within $duration ms.")
+            totalDuration += duration
         }
 
-        return event.createFollowup("Done")
+        return event.createFollowup("Done within $totalDuration ms")
 
     }
 
@@ -133,55 +135,57 @@ class ExportRolesCommand(
 
     private suspend fun createRoleContent(channel: MessageChannel, role: Role, members: List<Member>) {
         logger.info("Send role message for ${role.name} with ${members.size} members")
-        val now = LocalDate.now()
-        val header = "```${role.name} [${members.size}]```\n"
-        val footer = ""
+
         val content = StringBuilder()
-        members.forEachIndexed { index, member ->
-            if (index < members.size - 1) {
-                content.append(" ├─ ")
-            } else {
-                content.append(" └─ ")
-            }
-            content.append(member.displayName)
-//            member.joinTime.ifPresent {
-//                val period = Period.between(LocalDate.ofInstant(it, ZoneOffset.systemDefault()), now)
-//                content.append(" since ")
-//                content.append("${period.years}Y ")
-//                content.append("${period.months}M ")
-//                content.append("${period.days}D")
-//
-//            }
-            content.appendLine()
+
+        var current = 10
+        var length = 1
+        while (current > members.size && length < 10) {
+            current *= 10
+            length++
         }
 
-        val spec = MessageCreateSpec.builder()
-        val totalLength = header.length + footer.length + content.length
-        if (totalLength >= LIMIT_MESSAGE) {
-            logger.debug("Send split message of $totalLength bytes length")
+        members.forEachIndexed { index, member ->
+            content.append(index.plus(1).toString().padStart(length, '0')).append(". ")
+            content.append(member.displayName).appendLine()
+        }
+
+
+        val totalLength = content.length
+        if (totalLength >= LIMIT_DESCRIPTION) {
+            logger.debug("Send split message of $totalLength bytes")
+
 
             var index = 0
             var page = 1
-            while (index < content.length || page > 100) {
-                val firstPage = page == 1
-                val maxContentLength = if (firstPage) LIMIT_MESSAGE - header.length else LIMIT_MESSAGE - footer.length
-                val end = min(index + maxContentLength, content.length)
+            while (index < totalLength && page < 100) {
+                val end = min(index + LIMIT_DESCRIPTION, content.length)
                 val lastPage = end == content.length
                 val part = if (!lastPage) content.substring(index, end).substringBeforeLast('\n') else content.substring(index, end)
                 logger.debug("Send part $index with size ${part.length}")
 
-                if (firstPage) spec.content("$header$part") else if (lastPage) spec.content("$part$footer") else spec.content(part)
-                channel.createMessage(spec.build()).doOnError { error -> logger.error("Failed to send message", error) }.subscribe()
+                sendRoleMessage(channel, role, if (page == 1) members.size else -1, part.toString(), page)
+
                 index += part.length
                 page++
             }
 
         } else {
             logger.debug("Send complete message of $totalLength bytes length")
-            spec.content("$header$content$footer")
-            channel.createMessage(spec.build()).doOnError { error -> logger.error("Failed to send message", error) }.subscribe()
+            sendRoleMessage(channel, role, members.size, content.toString())
         }
 
+    }
+
+    private fun sendRoleMessage(channel: MessageChannel, role: Role, size: Int, content: String, page: Int = -1) {
+        val title = if (page >= 0) "${role.name} - Page $page" else role.name
+        val embed = EmbedCreateSpec.builder()
+            .color(Color.BISMARK)
+            .title(title)
+            .description(content)
+            .timestamp(Instant.now())
+        if (size >= 0) embed.addField("Members", "$size", false)
+        channel.createMessage(embed.build()).doOnError { error -> logger.error("Failed to send message", error) }.subscribe()
     }
 
     private suspend fun getMembers(guild: Guild): List<Member> {
@@ -230,7 +234,7 @@ class ExportRolesCommand(
     private fun getOptionAttachment(event: ChatInputInteractionEvent) = event.getOption(OPTION_ATTACHMENT)
         .flatMap(ApplicationCommandInteractionOption::getValue)
         .map(ApplicationCommandInteractionOptionValue::asBoolean)
-        .orElse(true)
+        .orElse(false)
 
     private fun getMemberForRole(role: Role, members: Iterable<Member>): List<Member> {
         return members.filter { it.roleIds.contains(role.id) }.sortedBy { it.displayName }.toList()
