@@ -2,10 +2,12 @@ package de.sambalmueslie.discord.bot.staffsergeant.discord.evt
 
 
 import de.sambalmueslie.discord.bot.staffsergeant.discord.cmd.CommandService
-import de.sambalmueslie.discord.bot.staffsergeant.discord.processor.RegisterBotProcessor
+import de.sambalmueslie.discord.bot.staffsergeant.discord.processor.EventProcessor
 import discord4j.core.GatewayDiscordClient
 import discord4j.core.event.domain.Event
 import discord4j.core.event.domain.guild.GuildCreateEvent
+import discord4j.core.event.domain.guild.GuildDeleteEvent
+import discord4j.core.event.domain.guild.GuildUpdateEvent
 import discord4j.core.event.domain.guild.MemberUpdateEvent
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
@@ -18,7 +20,8 @@ import org.slf4j.LoggerFactory
 @Singleton
 class EventService(
     private val commandService: CommandService,
-    private val registerBotProcessor: RegisterBotProcessor
+    private val registrar: EventRegistrar,
+    private val processor: List<EventProcessor>
 ) {
 
     companion object {
@@ -45,12 +48,14 @@ class EventService(
             is MemberUpdateEvent -> handleEvent(event)
             is ChatInputInteractionEvent -> handleEvent(event)
             is GuildCreateEvent -> handleEvent(event)
+            is GuildUpdateEvent -> handleEvent(event)
+            is GuildDeleteEvent -> handleEvent(event)
             is ButtonInteractionEvent -> handleEvent(event)
         }
     }
 
     private suspend fun handleEvent(event: MemberUpdateEvent) {
-        // TODO not implemented yet
+        registrar.handleEvent(event)
     }
 
     private suspend fun handleEvent(event: ChatInputInteractionEvent) {
@@ -58,7 +63,13 @@ class EventService(
     }
 
     private suspend fun handleEvent(event: GuildCreateEvent) {
-        registerBotProcessor.handleEvent(event)
+        registrar.handleEvent(event)
+    }
+    private suspend fun handleEvent(event: GuildUpdateEvent) {
+        registrar.handleEvent(event)
+    }
+    private suspend fun handleEvent(event: GuildDeleteEvent) {
+        registrar.handleEvent(event)
     }
 
     private suspend fun handleEvent(event: ButtonInteractionEvent) {

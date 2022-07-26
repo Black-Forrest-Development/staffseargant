@@ -1,26 +1,15 @@
-//package de.sambalmueslie.discord.bot.staffsergeant.discord.processor
-//
-//
-//import de.sambalmueslie.discord.bot.staffsergeant.discord.DiscordBot
-//import de.sambalmueslie.discord.bot.staffsergeant.discord.db.MemberNotifiedRoleEntry
-//import de.sambalmueslie.discord.bot.staffsergeant.discord.db.MemberNotifiedRoleEntryRepository
-//import de.sambalmueslie.discord.bot.staffsergeant.message.MessageService
-//import de.sambalmueslie.discord.bot.staffsergeant.message.api.Message
-//import discord4j.core.event.domain.guild.MemberUpdateEvent
-//import discord4j.core.`object`.entity.Member
-//import discord4j.core.`object`.entity.Role
-//import discord4j.core.`object`.entity.channel.PrivateChannel
-//import kotlinx.coroutines.Dispatchers
-//import kotlinx.coroutines.reactor.awaitSingle
-//import kotlinx.coroutines.reactor.awaitSingleOrNull
-//import kotlinx.coroutines.withContext
-//import org.apache.velocity.VelocityContext
-//import org.apache.velocity.app.VelocityEngine
-//import org.slf4j.Logger
-//import org.slf4j.LoggerFactory
-//import java.io.StringWriter
-//
-//class NotifyOnAssignedRoleProcessor(
+package de.sambalmueslie.discord.bot.staffsergeant.discord.processor
+
+
+import de.sambalmueslie.discord.bot.staffsergeant.discord.db.MemberNotifiedRoleEntryRepository
+import jakarta.inject.Singleton
+
+@Singleton
+class NotifyOnAssignedRoleProcessor(
+    private val repository: MemberNotifiedRoleEntryRepository,
+) {
+
+}
 //    private val messageService: MessageService,
 //    private val repository: MemberNotifiedRoleEntryRepository,
 //) {
