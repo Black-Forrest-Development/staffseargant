@@ -2,6 +2,8 @@ package de.sambalmueslie.discord.bot.staffsergeant.discord.cmd
 
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import de.sambalmueslie.discord.bot.staffsergeant.discord.kotlin.applicationCommand
+import de.sambalmueslie.discord.bot.staffsergeant.discord.kotlin.option
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
 import discord4j.core.event.domain.interaction.InteractionCreateEvent
 import discord4j.core.`object`.command.ApplicationCommandInteractionOption
@@ -14,8 +16,6 @@ import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.core.spec.MessageCreateSpec
-import discord4j.discordjson.json.ApplicationCommandOptionData
-import discord4j.discordjson.json.ApplicationCommandRequest
 import discord4j.rest.RestClient
 import discord4j.rest.util.Color
 import jakarta.inject.Singleton
@@ -53,31 +53,30 @@ class ExportRolesCommand(
         get() = CMD
 
     override fun register(restClient: RestClient, applicationId: Long) {
-        val request: ApplicationCommandRequest = ApplicationCommandRequest.builder()
-            .name(CMD)
-            .description("Prints the roles and their member")
-            .addOption(
-                ApplicationCommandOptionData.builder()
-                    .name(OPTION_FILTER)
-                    .description("A role name regex filter")
-                    .type(ApplicationCommandOption.Type.STRING.value)
-                    .required(false).build()
-            )
-            .addOption(
-                ApplicationCommandOptionData.builder()
-                    .name(OPTION_PUBLIC)
-                    .description("Public or personal response (default=public)")
-                    .type(ApplicationCommandOption.Type.BOOLEAN.value)
-                    .required(false).build()
-            )
-            .addOption(
-                ApplicationCommandOptionData.builder()
-                    .name(OPTION_ATTACHMENT)
-                    .description("Add an JSON attachment")
-                    .type(ApplicationCommandOption.Type.BOOLEAN.value)
-                    .required(false).build()
-            )
-            .build()
+        val request = applicationCommand {
+            name { CMD }
+            description { "Prints the roles and their member" }
+            options {
+                option {
+                    name { OPTION_FILTER }
+                    description { "A role name regex filter" }
+                    type { ApplicationCommandOption.Type.STRING.value }
+                    required { false }
+                }
+                option {
+                    name { OPTION_PUBLIC }
+                    description {"Public or personal response (default=public)" }
+                    type {ApplicationCommandOption.Type.BOOLEAN.value }
+                    required { false }
+                }
+                option {
+                    name { OPTION_ATTACHMENT }
+                    description {"Add an JSON attachment"}
+                    type {ApplicationCommandOption.Type.BOOLEAN.value }
+                    required { false }
+                }
+            }
+        }
 
         restClient.applicationService.createGlobalApplicationCommand(applicationId, request).subscribe()
     }

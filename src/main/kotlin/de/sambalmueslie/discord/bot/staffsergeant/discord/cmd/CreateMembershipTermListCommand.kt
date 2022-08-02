@@ -1,6 +1,8 @@
 package de.sambalmueslie.discord.bot.staffsergeant.discord.cmd
 
 
+import de.sambalmueslie.discord.bot.staffsergeant.discord.kotlin.applicationCommand
+import de.sambalmueslie.discord.bot.staffsergeant.discord.kotlin.option
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
 import discord4j.core.event.domain.interaction.InteractionCreateEvent
 import discord4j.core.`object`.command.ApplicationCommandInteractionOption
@@ -9,8 +11,6 @@ import discord4j.core.`object`.command.ApplicationCommandOption
 import discord4j.core.`object`.entity.Message
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.core.spec.InteractionFollowupCreateSpec
-import discord4j.discordjson.json.ApplicationCommandOptionData
-import discord4j.discordjson.json.ApplicationCommandRequest
 import discord4j.rest.RestClient
 import discord4j.rest.util.Color
 import jakarta.inject.Singleton
@@ -40,31 +40,30 @@ class CreateMembershipTermListCommand : Command {
         get() = CMD
 
     override fun register(restClient: RestClient, applicationId: Long) {
-        val request: ApplicationCommandRequest = ApplicationCommandRequest.builder()
-            .name(CMD)
-            .description("Prints a list of member ordered by join date")
-            .addOption(
-                ApplicationCommandOptionData.builder()
-                    .name(OPTION_FILTER)
-                    .description("A role name regex filter")
-                    .type(ApplicationCommandOption.Type.STRING.value)
-                    .required(false).build()
-            )
-            .addOption(
-                ApplicationCommandOptionData.builder()
-                    .name(OPTION_LENGTH)
-                    .description("The length of the list")
-                    .type(ApplicationCommandOption.Type.INTEGER.value)
-                    .required(false).build()
-            )
-            .addOption(
-                ApplicationCommandOptionData.builder()
-                    .name(OPTION_PUBLIC)
-                    .description("Public or personal response (default=public)")
-                    .type(ApplicationCommandOption.Type.BOOLEAN.value)
-                    .required(false).build()
-            )
-            .build()
+        val request = applicationCommand {
+            name { CMD }
+            description { "Prints a list of member ordered by join date" }
+            options {
+                option {
+                    name { OPTION_FILTER }
+                    description { "A role name regex filter" }
+                    type { ApplicationCommandOption.Type.STRING.value }
+                    required { false }
+                }
+                option {
+                    name { OPTION_LENGTH }
+                    description { "The length of the list" }
+                    type { ApplicationCommandOption.Type.INTEGER.value }
+                    required { false }
+                }
+                option {
+                    name { OPTION_PUBLIC }
+                    description { "Public or personal response (default=public)" }
+                    type { ApplicationCommandOption.Type.BOOLEAN.value }
+                    required { false }
+                }
+            }
+        }
 
         restClient.applicationService.createGlobalApplicationCommand(applicationId, request).subscribe()
     }

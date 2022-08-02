@@ -1,13 +1,13 @@
 package de.sambalmueslie.discord.bot.staffsergeant.discord.cmd
 
 
+import de.sambalmueslie.discord.bot.staffsergeant.discord.kotlin.applicationCommand
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
 import discord4j.core.event.domain.interaction.InteractionCreateEvent
 import discord4j.core.`object`.component.ActionRow
 import discord4j.core.`object`.component.Button
 import discord4j.core.`object`.component.LayoutComponent
-import discord4j.discordjson.json.ApplicationCommandRequest
 import discord4j.rest.RestClient
 import jakarta.inject.Singleton
 import org.slf4j.Logger
@@ -25,10 +25,11 @@ class GuildSettingsCommand : Command {
         get() = CMD
 
     override fun register(restClient: RestClient, applicationId: Long) {
-        val request: ApplicationCommandRequest = ApplicationCommandRequest.builder()
-            .name(CMD)
-            .description("Show the current settings")
-            .build()
+
+        val request = applicationCommand {
+            name { CMD }
+            description { "Show the current settings" }
+        }
 
         restClient.applicationService.createGlobalApplicationCommand(applicationId, request).subscribe()
     }
