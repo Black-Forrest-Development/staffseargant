@@ -50,7 +50,7 @@ dependencies {
     runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
 
     // discord
-    implementation("com.discord4j:discord4j-core:3.2.3")
+    implementation("com.discord4j:discord4j-core:3.2.4")
     // mockk
     testImplementation("io.mockk:mockk:1.13.4")
     // coroutines
