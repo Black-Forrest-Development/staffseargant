@@ -56,7 +56,7 @@ dependencies {
     // coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.6.4")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.6.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.7.0")
     // velocity
 //    implementation("org.apache.velocity:velocity-engine-core:2.3")
 //    implementation("org.apache.velocity:velocity-tools:2.0")
