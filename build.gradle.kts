@@ -4,7 +4,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.allopen") version "1.8.21"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("io.micronaut.application") version "3.7.9"
-    id("org.sonarqube") version "4.0.0.2929"
+    id("org.sonarqube") version "4.1.0.3113"
 }
 
 version = "0.1"
