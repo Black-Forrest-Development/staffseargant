@@ -54,7 +54,7 @@ dependencies {
     // mockk
     testImplementation("io.mockk:mockk:1.13.5")
     // coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.7.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.7.1")
     // velocity
