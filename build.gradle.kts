@@ -52,7 +52,7 @@ dependencies {
     // discord
     implementation("com.discord4j:discord4j-core:3.2.5")
     // mockk
-    testImplementation("io.mockk:mockk:1.13.7")
+    testImplementation("io.mockk:mockk:1.13.8")
     // coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.7.3")
